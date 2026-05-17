@@ -104,7 +104,7 @@ RL_StatsCSV.write(f"{header}\n")
 for N in [4,6,8,10,12,14,16]:
 	print(f"Generating RL Original Loops{N}x{N}")
 	L = RL_original(N)
-	
+	print(L)
 	T = loopStatistic.getStats(N,L)
 	line = ",".join(str(i) for i in T)
 	RL_StatsCSV.write(f"{line}\n")

@@ -18,12 +18,13 @@ import RL_original
 
 
 def RL_original_Double(N):
-	originalLoopSet = RL_original(N)
+	originalLoopSet = RL_original.RL_original(N)
 	
 	L = []
 	for l in originalLoopSet:
 		L.append(l)
-		L.append(l[::-1])
+		if len(l) != 4:
+			L.append(l[::-1])
 	return L
 		
 
@@ -36,7 +37,7 @@ RLDouble_StatsCSV.write(f"{header}\n")
 
 for N in [4,6,8,10,12,14,16]:
 	print(f"Generating RL Original Loops{N}x{N}")
-	L = RL_original.RL_original(N)
+	L = RL_original_Double(N)
 	
 	T = loopStatistic.getStats(N,L)
 	line = ",".join(str(i) for i in T)
