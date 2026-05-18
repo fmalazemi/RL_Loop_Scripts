@@ -65,10 +65,9 @@ def RL_HP_loops(N):
 	L = helper.convertCordinates(L, N)
 	return L
 
-
-
-
 HP_RL_StatsCSV = open("HP_RL_Stats.csv", "w")
+
+
 header = ",".join(loopStatistic.getStatsHeader())
 HP_RL_StatsCSV.write(f"{header}\n")
 
