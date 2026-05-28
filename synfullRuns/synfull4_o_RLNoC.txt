@@ -1,0 +1,16 @@
+barnes.model,4.35574
+blackscholes.model,4.33919
+bodytrack.model,4.10556
+cholesky.model,4.71329
+facesim.model,4.47678
+fft.model,4.41628
+fluidanimate.model,4.54655
+lu_cb.model,4.28843
+lu_ncb.model,4.67759
+radiosity.model,4.28099
+radix.model,4.36572
+raytrace.model,4.38729
+swaptions.model,4.23298
+volrend.model,4.92324
+water_nsquared.model,4.2513
+water_spatial.model,4.08956
