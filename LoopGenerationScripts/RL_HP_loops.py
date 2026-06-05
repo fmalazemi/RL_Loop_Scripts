@@ -29,8 +29,9 @@ def HP_Layer(N):
 		return L 
 	#Group A: outer layer, Anticlockwise
 	l = helper.generateLoop_2D_coordinates(0, 0, N-1, N-1)
-	l.reverse()
 	L.append(l)
+	L.append(l[::-1])
+	
 	
 	#group B: Clockwise
 	for i in range(N-2):
@@ -65,23 +66,27 @@ def RL_HP_loops(N):
 	L = helper.convertCordinates(L, N)
 	return L
 
-HP_RL_StatsCSV = open("HP_RL_Stats.csv", "w")
 
-
-header = ",".join(loopStatistic.getStatsHeader())
-HP_RL_StatsCSV.write(f"{header}\n")
-
-
-
-for N in range(4, 33, 2):
-	print(f"Generating {N}x{N}")
-	L = RL_HP_loops(N)
+def main():
 	
-	T = loopStatistic.getStats(N,L)
-	line = ",".join(str(i) for i in T)
-	HP_RL_StatsCSV.write(f"{line}\n")
-	print("Statistic added")
-	#routingTable.RoutingTable(N, L)
-	#routingTable.RoutingTableToFile(N, L, f"hpRLConfig{N}.txt")
-	print("Routing Table To File Done.")
+	HP_RL_StatsCSV = open("HP_RL_Stats.csv", "w")
+	
+	
+	header = ",".join(loopStatistic.getStatsHeader())
+	HP_RL_StatsCSV.write(f"{header}\n")
+	
+	
+	
+	for N in range(4, 33, 2):
+		print(f"Generating {N}x{N}")
+		L = RL_HP_loops(N)
 		
+		T = loopStatistic.getStats(N,L)
+		line = ",".join(str(i) for i in T)
+		HP_RL_StatsCSV.write(f"{line}\n")
+		print("Statistic added")
+		#routingTable.RoutingTable(N, L)
+		#routingTable.RoutingTableToFile(N, L, f"hpRLConfig{N}.txt")
+		print("Routing Table To File Done.")
+if __name__ == "__main__":
+	main()
