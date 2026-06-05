@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Create an academic-style curve figure from N CSV files.
+Create an academic-style curve figure from N CSV files, and export the
+exact data behind the figure to a CSV.
 
-Each file should contain at least these columns:
+Each input file should contain at least these columns:
   - Injection_rate
   - _avg_plat
 
@@ -18,7 +19,8 @@ IDE-friendly usage:
 
 The script saves:
   - packet_latency_vs_injection_rate.png
-  - packet_latency_vs_injection_rate.pdf
+  - <traffic>_<NOC_SIZE>.pdf
+  - <traffic>_<NOC_SIZE>_figure_data.csv   (the data plotted in the figure)
 """
 
 from pathlib import Path
@@ -40,53 +42,30 @@ import matplotlib.pyplot as plt
 #
 # label: the name shown in the figure legend.
 traffic = "Uniform"
-NOC_SIZE = 16
-MAIN_FOLDER = "./"
+NOC_SIZE = 4
+MAIN_FOLDER = ""
 TRAFFIC_PATTERN = f"rlBeta{traffic}Output_with_headers.csv"
 OUTPUT_FILE = f"{traffic}_{NOC_SIZE}.pdf"
 TITLE = f"{traffic} {NOC_SIZE}x{NOC_SIZE}"
-SUB_FOLDERS = ["RL_original_Runs", "RL_double_runs", "RL_HP_runs_improved", "RL_ONIONPLUS_runs"]
-LABEL = ["O-RLNoC", "D-RLNoC", "RHP-RLNoC", "Onion+"]
+SUB_FOLDERS = ["RL_original_Runs", "RL_ONIONPLUS_runs", "RL_double_runs", "RL_HP_runs_improved"]
+LABEL = ["O-RLNoC", "Onion+", "D-RLNoC" ,"RHP-RLNoC"]
 
 DATA_FILES = []
 for i in range(len(SUB_FOLDERS)):
-  file = { "path": f"{SUB_FOLDERS[i]}/runs{NOC_SIZE}/{TRAFFIC_PATTERN}",
-            "label": LABEL[i]
-  }
-  DATA_FILES.append(file)
-  
-
-  '''
-DATA_FILES = [
-    {
-        "path": f"{MAIN_FOLDER}RL_original_Runs/runs4/rlBetaUniformOutput_with_headers.csv",
-        "label": "O-RLNoC"
-    },{
-      "path": "/Users/fawaz/Desktop/hpRLNoC/RL_double_runs/runs4/rlBetaUniformOutput_with_headers.csv",
-      "label": "D-RLNoC"
-    },{
-        "path": "/Users/fawaz/Desktop/hpRLNoC/RL_HP_runs/runs4/rlBetaUniformOutput_with_headers.csv",
-        "label": "RHP-RLNoC"
-    },
-
-    # Add more files like this:
-    # {
-    #     "path": "another_file_with_headers.csv",
-    #     "label": "Proposed Design"
-    # },
-    # {
-    #     "path": "third_file_with_headers.csv",
-    #     "label": "Baseline"
-    # },
-]'''
+    file = {
+        "path": f"{MAIN_FOLDER}{SUB_FOLDERS[i]}/runs{NOC_SIZE}/{TRAFFIC_PATTERN}",
+        "label": LABEL[i],
+    }
+    DATA_FILES.append(file)
 
 # Column names in your CSV files
 X_COLUMN = "Injection_rate"
 Y_COLUMN = "_avg_plat"
 
-# Output figure names
+# Output file names
 OUTPUT_PNG = "packet_latency_vs_injection_rate.png"
 OUTPUT_PDF = OUTPUT_FILE
+OUTPUT_CSV = f"{traffic}_{NOC_SIZE}_figure_data.csv"
 
 # Figure text
 FIGURE_TITLE = ""  # For papers, usually keep title empty and use the caption instead.
@@ -113,7 +92,7 @@ X_LIMITS = None
 # Example:
 # X_LIMITS = (0.0, 0.18)
 
-Y_LIMITS = (0,200)
+Y_LIMITS = (0, 200)
 # Example:
 # Y_LIMITS = (0, 200)
 
@@ -171,6 +150,26 @@ def apply_academic_style():
     })
 
 
+def save_figure_data(curves):
+    """Write the exact (x, y) data behind the figure to a CSV.
+
+    Output is a wide table: first column is the injection rate, then one
+    column per curve (named by its legend label). Curves are merged with an
+    outer join on injection rate, so nothing is dropped if the sweeps differ;
+    missing points are left blank.
+    """
+    merged = None
+    for label, x, y in curves:
+        d = pd.DataFrame({X_COLUMN: x.values, label: y.values})
+        # collapse any duplicate injection rates within a single curve
+        d = d.groupby(X_COLUMN, as_index=False).mean()
+        merged = d if merged is None else pd.merge(merged, d, on=X_COLUMN, how="outer")
+
+    merged = merged.sort_values(by=X_COLUMN).reset_index(drop=True)
+    merged = merged.rename(columns={X_COLUMN: "Injection_rate"})
+    merged.to_csv(OUTPUT_CSV, index=False)
+
+
 def create_figure():
     if not DATA_FILES:
         print("ERROR: DATA_FILES is empty.")
@@ -185,6 +184,7 @@ def create_figure():
     linestyles = ["-", "--", "-.", ":"]
 
     plotted = 0
+    curves = []  # collect (label, x, y) for the CSV export
 
     for i, file_info in enumerate(DATA_FILES):
         try:
@@ -204,6 +204,8 @@ def create_figure():
                 markerfacecolor="white",
                 markeredgewidth=1.2,
             )
+
+            curves.append((label, x, y))
 
             print(f"Plotted: {file_info['path']} as '{label}'")
             plotted += 1
@@ -248,12 +250,14 @@ def create_figure():
     fig.savefig(OUTPUT_PNG, dpi=DPI)
     fig.savefig(OUTPUT_PDF)
 
+    save_figure_data(curves)
+
     print()
     print("Figure created successfully.")
-    #print(f"PNG saved as: {OUTPUT_PNG}")
     print(f"PDF saved as: {OUTPUT_PDF}")
+    print(f"CSV saved as: {OUTPUT_CSV}")
 
-    #plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":
